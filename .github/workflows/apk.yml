@@ -1,0 +1,51 @@
+name: driver-apk
+
+on:
+  workflow_dispatch:
+    inputs:
+      driver_url:
+        description: "AdrenoTools 驱动 zip 直链"
+        required: true
+        default: "https://github.com/WinNative-Emu/Drivers/releases/download/v1.19/WN-Turnip-1.19-b_Axxx.zip"
+      driver_name:
+        description: "FCL 里显示的驱动名"
+        required: true
+        default: "WN-Turnip 1.19 b"
+      suffix:
+        description: "应用包名后缀（每个驱动唯一，多驱动共存靠它）"
+        required: true
+        default: ".wnt119b"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: 取出驱动 .so
+        run: |
+          curl -fL -o driver.zip "$DRIVER_URL"
+          unzip -o driver.zip libvulkan_freedreno.so
+          mkdir -p app/src/main/jniLibs/arm64-v8a
+          mv libvulkan_freedreno.so app/src/main/jniLibs/arm64-v8a/
+          ls -l app/src/main/jniLibs/arm64-v8a/
+        env:
+          DRIVER_URL: ${{ inputs.driver_url }}
+
+      - name: 构建 APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug -PdriverName="$DRIVER_NAME" -PdriverSuffix="$SUFFIX"
+        env:
+          DRIVER_NAME: ${{ inputs.driver_name }}
+          SUFFIX: ${{ inputs.suffix }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: driver-apk
+          path: app/build/outputs/apk/debug/*.apk
