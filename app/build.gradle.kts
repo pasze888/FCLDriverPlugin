@@ -20,16 +20,12 @@ android {
             isMinifyEnabled = false
         }
         configureEach {
-            //应用名
-            //app name
-            resValue("string","app_name","Turnip 24.3.2")
-            //包名后缀
-            //package name Suffix
-            applicationIdSuffix = ".turnip2432"
-
-            //驱动在启动器内显示的名称
-            //The name displayed by the driver in the launcher
-            manifestPlaceholders["driver"] = "Turnip 24.3.2"
+            //驱动名/后缀可用 -PdriverName=xxx -PdriverSuffix=.xxx 覆盖，默认沿用模板值
+            val driverName = (findProperty("driverName") as String?) ?: "Turnip 24.3.2"
+            val driverSuffix = (findProperty("driverSuffix") as String?) ?: ".turnip2432"
+            resValue("string", "app_name", driverName)
+            applicationIdSuffix = driverSuffix
+            manifestPlaceholders["driver"] = driverName
             //驱动库文件名（须存在于 src/main/jniLibs/<abi>/ 下）
             //Driver library file name (must exist under src/main/jniLibs/<abi>/)
             manifestPlaceholders["driverLib"] = "libvulkan_freedreno.so"
